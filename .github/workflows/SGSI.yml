@@ -1,0 +1,74 @@
+name: TIME TO BUILD......
+
+on: 
+  #releasepush:
+    #pushbuild
+
+  watch: 
+      types: [started]
+    
+env:              #change ROM_URL,ROM_NAME,ZIP_NAME,ROMZIP_NAME respectivley. ROM_NAME is case sensitive 
+  ROM_URL: https://pdrive.priyo.workers.dev/0://image-crosshatch-spp1.210122.022.zip
+  ZIP_NAME: test.zip
+  REPACK_NAME: Pixel5_SGSI_PriyoGSIs.zip  
+  SECRETS_PASSWORD: ${{ secrets.SFPASS }}
+  TZ: Asia/Bangladesh
+  SFDIRA1: cd /home/smpriyo/pfs/projects/priyogsis/files/PriyoFiles
+  SFDIRA2: cd /home/smpriyo/pfs/projects/priyogsis/files/PriyoDumps
+  SFUSER: ${{ secrets.SFUSER }}
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+
+    steps:
+       - name: Checkout
+         uses: actions/checkout@main 
+                 
+       - name: Setting up the SPICES
+         run: |
+            sudo -E apt-get -qq update
+            sudo -E apt-get -qq install git openjdk-8-jdk wget
+            sudo -E apt-get -qq install git zip unzip curl expect
+
+       - name: Cloneing...
+         run: |
+             git clone https://github.com/SmPriyo/PriyoSGSIs.git PriyoSGSIs
+             sudo chmod 777 -R PriyoSGSIs
+           
+       - name: Downloading Firmware...
+         run: |
+            cd PriyoSGSIs
+            mkdir ./tmp
+            cd ./tmp
+            sudo wget $ROM_URL -O $ZIP_NAME && ls
+            
+       - name: Setup Tool Utils...
+         run: |
+            cd PriyoSGSIs
+            sudo bash ./setup.sh
+
+       - name: Building SGSI...
+         run: |
+            cd PriyoSGSIs 
+            sudo bash ./make.sh AB
+            #ls ./tmp
+
+       - name: Repack output file ...
+         run: |            
+             cd PriyoSGSIs
+             pwd
+             sudo zip -r ./$REPACK_NAME ./SGSI/*
+             cd ./SGSI
+              
+       - name: Upload SGSI to WeTransfer...
+         run: |
+           cd PriyoSGSIs
+           pwd
+           ls $REPACK_NAME
+           curl -sL https://git.io/file-transfer | sh
+           ./transfer wet ./$REPACK_NAME
+       - name: Print build info
+         run: |
+              cat PriyoSGSIs//*-build-info-*.txt
