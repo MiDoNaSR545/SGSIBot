@@ -1,21 +1,21 @@
-name: TIME TO BUILD......
+# This is a basic workflow to help you get started with Actions
 
-on: 
-  #releasepush:
-    #pushbuild
+name: SGSI_Build
 
-  watch: 
-      types: [started]
+on:
+  watch:
+    types: [started]
     
-env:              #change ROM_URL,ROM_NAME,ZIP_NAME,ROMZIP_NAME respectivley. ROM_NAME is case sensitive 
-  ROM_URL: https://pdrive.priyo.workers.dev/0://image-crosshatch-spp1.210122.022.zip
+env:              
+  ROM_URL: https://component-ota-fs-f.coloros.com/component-ota/21/03/08/e31e9c43e93d4b5082971424ff99a134.zip
   ZIP_NAME: test.zip
-  REPACK_NAME: Pixel5_SGSI_PriyoGSIs.zip  
-  SECRETS_PASSWORD: ${{ secrets.SFPASS }}
-  TZ: Asia/Bangladesh
-  SFDIRA1: cd /home/smpriyo/pfs/projects/priyogsis/files/PriyoFiles
-  SFDIRA2: cd /home/smpriyo/pfs/projects/priyogsis/files/PriyoDumps
-  SFUSER: ${{ secrets.SFUSER }}
+  OS_TYPE: Oppo
+  BUILD_TYPE: 'ab'
+  REPACK_NAME: test_action.zip
+  VERSION: 12
+  upload_WeTransfer: 'true'
+  upload_action-gh-release: 'false'
+  SETUP: 'true'
   
 jobs:
   build:
@@ -24,51 +24,56 @@ jobs:
 
     steps:
        - name: Checkout
-         uses: actions/checkout@main 
-                 
+         uses: actions/checkout@main
+       
+           
        - name: Setting up the SPICES
          run: |
-            sudo -E apt-get -qq update
-            sudo -E apt-get -qq install git openjdk-8-jdk wget
-            sudo -E apt-get -qq install git zip unzip curl expect
-
-       - name: Cloneing...
+            sudo apt-get install -y git openjdk-8-jdk wget git zip unzip curl
+       - name: Cloning...
          run: |
-             git clone https://github.com/SmPriyo/PriyoSGSIs.git PriyoSGSIs
-             sudo chmod 777 -R PriyoSGSIs
+             git clone https://github.com/SmPriyo/PriyoSGSIs.git -b 11 $GITHUB_WORKSPACE/SGSI-build-tool
            
-       - name: Downloading Firmware...
+       - name: Download zip...
          run: |
-            cd PriyoSGSIs
+            cd $GITHUB_WORKSPACE/PriyoSGSIs
             mkdir ./tmp
             cd ./tmp
             sudo wget $ROM_URL -O $ZIP_NAME && ls
             
        - name: Setup Tool Utils...
+         if: env.SETUP == 'true'
          run: |
-            cd PriyoSGSIs
-            sudo bash ./setup.sh
-
-       - name: Building SGSI...
+            sudo bash $GITHUB_WORKSPACE/PriyoSGSIs/setup.sh
+       - name: Building AB DEVICES SGSI...
+         if: env.BUILD_TYPE == 'AB' || env.BUILD_TYPE == 'ab'
          run: |
-            cd PriyoSGSIs 
-            sudo bash ./make.sh AB
-            #ls ./tmp
-
+            sudo bash $GITHUB_WORKSPACE/PriyoSGSIs/make.sh --AB $OS_TYPE $ZIP_NAME --fix-bug
+       - name: Building A-only DEVICES SGSI...
+         if: env.BUILD_TYPE == 'a-only'
+         run: |
+            sudo bash $GITHUB_WORKSPACE/PriyoSGSIs/make.sh --a-only $OS_TYPE $ZIP_NAME --fix-bug            
        - name: Repack output file ...
          run: |            
-             cd PriyoSGSIs
+             cd $GITHUB_WORKSPACE/PriyoSGSIs
              pwd
-             sudo zip -r ./$REPACK_NAME ./SGSI/*
-             cd ./SGSI
-              
+             zip -r $REPACK_NAME ./SGSI/*
+             ls "$REPACK_NAME"
        - name: Upload SGSI to WeTransfer...
+         if: env.upload_WeTransfer == 'true' 
          run: |
-           cd PriyoSGSIs
+           cd $GITHUB_WORKSPACE/PriyoSGSIs
            pwd
-           ls $REPACK_NAME
+           ls "$REPACK_NAME"
            curl -sL https://git.io/file-transfer | sh
            ./transfer wet ./$REPACK_NAME
-       - name: Print build info
-         run: |
-              cat PriyoSGSIs//*-build-info-*.txt
+       - name: Upload SGSI to action-gh-release...
+         if: env.upload_action-gh-release == 'true'
+         uses: softprops/action-gh-release@v1
+         with:
+           files: ${{ github.workspace }}/PriyoSGSIs/${{ env.REPACK_NAME }}
+           name: PriyoSGSIs-${{ env.OS_TYPE }}-${{ env.BUILD_TYPE }}-Android${{ env.VERSION }}-unpack
+           tag_name: 12
+           #body: Use actions auto bulid
+         env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}       
