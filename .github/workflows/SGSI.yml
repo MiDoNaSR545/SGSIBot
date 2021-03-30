@@ -11,7 +11,7 @@ env:
   ZIP_NAME: test.zip
   OS_TYPE: Oppo
   BUILD_TYPE: 'ab'
-  REPACK_NAME: test_action.zip
+  REPACK_NAME: build_action.zip
   VERSION: 12
   upload_WeTransfer: 'true'
   upload_action-gh-release: 'false'
@@ -44,17 +44,18 @@ jobs:
        - name: Setup Tool Utils...
          if: env.SETUP == 'true'
          run: |
-            sudo bash PriyoSGSIs/setup.sh
+            sudo bash ./setup.sh
 
        - name: Building AB DEVICES SGSI...
+         cd PriyoSGSIs
          if: env.BUILD_TYPE == 'AB' || env.BUILD_TYPE == 'ab'
          run: |
-            sudo bash PriyoSGSIs/make.sh --AB $OS_TYPE $ZIP_NAME --fix-bug
+            sudo bash ./make.sh --AB $ZIP_NAME --fix-bug
 
        - name: Building A-only DEVICES SGSI...
          if: env.BUILD_TYPE == 'a-only'
          run: |
-            sudo bash PriyoSGSIs/make.sh --a-only $OS_TYPE $ZIP_NAME --fix-bug
+            sudo bash ./make.sh --a-only $ZIP_NAME --fix-bug
            
        - name: Repack output file ...
          run: |            
@@ -70,13 +71,3 @@ jobs:
            ls "$REPACK_NAME"
            curl -sL https://git.io/file-transfer | sh
            ./transfer wet ./$REPACK_NAME
-       - name: Upload SGSI to action-gh-release...
-         if: env.upload_action-gh-release == 'true'
-         uses: softprops/action-gh-release@v1
-         with:
-           files: ${{ github.workspace }}/PriyoSGSIs/${{ env.REPACK_NAME }}
-           name: PriyoSGSIs-${{ env.OS_TYPE }}-${{ env.BUILD_TYPE }}-Android${{ env.VERSION }}-unpack
-           tag_name: 11
-           #body: Use actions auto bulid
-         env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}       
