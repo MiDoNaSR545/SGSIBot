@@ -32,7 +32,7 @@ jobs:
             sudo apt-get install -y git openjdk-8-jdk wget git zip unzip curl
        - name: Cloning...
          run: |
-             git clone https://github.com/SmPriyo/PriyoSGSIs.git -b 11 $GITHUB_WORKSPACE/PriyoSGSIs
+             git clone https://github.com/SmPriyo/PriyoSGSIs.git -b 11 PriyoSGSIs
            
        - name: Download zip...
          run: |
@@ -49,11 +49,12 @@ jobs:
        - name: Building AB DEVICES SGSI...
          if: env.BUILD_TYPE == 'AB' || env.BUILD_TYPE == 'ab'
          run: |
-            sudo bash $GITHUB_WORKSPACE/PriyoSGSIs/make.sh --AB $OS_TYPE $ZIP_NAME --fix-bug
+            sudo bash PriyoSGSIs/make.sh --AB $OS_TYPE $ZIP_NAME --fix-bug
+
        - name: Building A-only DEVICES SGSI...
          if: env.BUILD_TYPE == 'a-only'
          run: |
-            sudo bash $GITHUB_WORKSPACE/PriyoSGSIs/make.sh --a-only $OS_TYPE $ZIP_NAME --fix-bug
+            sudo bash PriyoSGSIs/make.sh --a-only $OS_TYPE $ZIP_NAME --fix-bug
            
        - name: Repack output file ...
          run: |            
