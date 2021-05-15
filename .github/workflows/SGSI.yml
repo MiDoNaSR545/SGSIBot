@@ -7,9 +7,9 @@ on:
     types: [started]
     
 env:              
-  ROM_URL: https://component-ota-fs-f.coloros.com/component-ota/21/03/08/e31e9c43e93d4b5082971424ff99a134.zip
+  ROM_URL: https://otafsg1.h2os.com/patch/amazone2/GLO/OnePlus6Oxygen/OnePlus6Oxygen_22.J.53_GLO_053_2104202241/OnePlus6Oxygen_22.J.53_OTA_053_all_2104202241_ecefb.zip
   ZIP_NAME: test.zip
-  OS_TYPE: Oppo
+  OS_TYPE: oneplus
   BUILD_TYPE: 'ab'
   REPACK_NAME: build_action.zip
   VERSION: 12
